@@ -1,0 +1,8 @@
+include ':router_api'
+include ':router_api'
+include ':router_annotation'
+include ':router_compiler'
+include ':common'
+include ':order'
+include ':app'
+rootProject.name = "RouterDemo"

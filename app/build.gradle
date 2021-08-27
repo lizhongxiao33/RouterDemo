@@ -1,0 +1,67 @@
+plugins {
+    id 'com.android.application'
+}
+
+//可写可不写、提高性能
+def app_android = this.getRootProject().ext.app_android;
+def app_dependencies = this.getRootProject().ext.app_dependencies;
+
+android {
+    compileSdkVersion app_android.compileSdkVersion
+    buildToolsVersion app_android.buildToolsVersion
+
+    defaultConfig {
+        applicationId app_android.applicationId
+        minSdkVersion app_android.minSdkVersion
+        targetSdkVersion app_android.targetSdkVersion
+        versionCode app_android.versionCode
+        versionName app_android.versionName
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("boolean", "isRelease", String.valueOf(isRelease))
+
+        // 在gradle文件中配置选项参数值（用于APT传参接收）
+        javaCompileOptions {
+            annotationProcessorOptions {
+                // project.getName() == app
+                // this.project.getName() == app
+                // this.getProject().getName() == app
+                arguments = [moduleName: project.getName(), packageNameForAPT: packageNameForAPT]
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    testImplementation 'junit:junit:4.+'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+
+    // 循环导入三方库
+    app_dependencies.each {libName, libLink ->
+        implementation libLink
+    }
+
+    implementation project(":common")
+
+    if (isRelease) {
+        implementation project(":order")
+    }
+
+    implementation project(":router_annotation")
+    annotationProcessor project(':router_compiler')
+}
