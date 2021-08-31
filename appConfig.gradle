@@ -1,6 +1,6 @@
 ext{
 
-    isRelease = false
+    isRelease = true
 
     app_android = [
             compileSdkVersion :30,

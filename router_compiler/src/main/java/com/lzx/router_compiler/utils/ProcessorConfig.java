@@ -53,7 +53,7 @@ public interface ProcessorConfig {
 
 
     // @Parameter注解 的 包名 + 类名
-    String PARAMETER_PACKAGE = "com.xiangxue.arouter_annotation.Parameter";
+    String PARAMETER_PACKAGE = "com.lzx.router_annotation.Parameter";
 
     // Router api 的 ParameterGet 高层标准
     String ROUTER_AIP_PARAMETER_GET = ROUTER_API_PACKAGE + ".ParameterGet";

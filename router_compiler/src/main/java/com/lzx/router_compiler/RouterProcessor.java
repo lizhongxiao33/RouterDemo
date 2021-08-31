@@ -11,6 +11,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.WildcardTypeName;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -93,6 +94,7 @@ public class RouterProcessor extends AbstractProcessor {
         Set<? extends Element> elements = roundEnv.getElementsAnnotatedWith(Router.class);
 
         TypeElement activityType = elementTool.getTypeElement(ProcessorConfig.ACTIVITY_PACKAGE);
+        messager.printMessage(Diagnostic.Kind.NOTE, "activityType：" + activityType);
         TypeMirror activityMirror = activityType.asType(); //Mirror 镜子 自描述 包含类信息
 
         for (Element element : elements) {
@@ -156,7 +158,6 @@ public class RouterProcessor extends AbstractProcessor {
         }
 
         //使用JavaPoet生成java文件
-
         TypeName methodReturn = ParameterizedTypeName.get(
                 ClassName.get(Map.class),         // Map
                 ClassName.get(String.class),      // Map<String,
@@ -169,8 +170,8 @@ public class RouterProcessor extends AbstractProcessor {
                     .addAnnotation(Override.class) // @Override注解
                     .addModifiers(Modifier.PUBLIC) // public修饰符
                     .returns(methodReturn); // 返回值
-
             // Map<String, RouterBean> pathMap = new HashMap<>();
+
             methodBuilder.addStatement("$T<$T, $T> $N = new $T<>()",
                     ClassName.get(Map.class),           // Map
                     ClassName.get(String.class),        // Map<String,
@@ -179,7 +180,6 @@ public class RouterProcessor extends AbstractProcessor {
                     ClassName.get(HashMap.class));     // Map<String, RouterBean> pathMap = new HashMap<>();
 
             List<RouterBean> pathList = entry.getValue();
-
             for (RouterBean bean : pathList) {
                 methodBuilder.addStatement("$N.put($S, $T.create($T.$L, $T.class, $S, $S))",
                         ProcessorConfig.PATH_VAR1, // pathMap.put
@@ -194,7 +194,9 @@ public class RouterProcessor extends AbstractProcessor {
             }
 
             methodBuilder.addStatement("return $N", ProcessorConfig.PATH_VAR1);
+
             String finalClassName = ProcessorConfig.PATH_FILE_NAME + entry.getKey(); //Router$$Path$$xxxxxxx
+            messager.printMessage(Diagnostic.Kind.NOTE, "test："+pathType);
 
             JavaFile.builder(aptPackage, // APT生成文件存放的路径
                     TypeSpec.classBuilder(finalClassName) // 类名
@@ -204,14 +206,71 @@ public class RouterProcessor extends AbstractProcessor {
                             .build()) // 类构建完成
                             .build() // JavaFile构建完成
                             .writeTo(filer); // 文件生成器开始生成类文件
-
             mAllGroupMap.put(entry.getKey(), finalClassName);
         }
     }
 
 
     private void createGroupFile(TypeElement groupType, TypeElement pathType) throws IOException{
+        //缓存二 判断是否有需要生成的类文件
+        if (ProcessorUtils.isEmpty(mAllGroupMap) || ProcessorUtils.isEmpty(mAllPathMap)) return;
 
+        // 返回值 这一段 Map<String, Class<? extends ARouterPath>>
+        TypeName methodReturns = ParameterizedTypeName.get(
+                ClassName.get(Map.class),        // Map
+                ClassName.get(String.class),    // Map<String,
+
+                // Class<? extends ARouterPath>>
+                ParameterizedTypeName.get(ClassName.get(Class.class),
+                        // ? extends ARouterPath
+                        WildcardTypeName.subtypeOf(ClassName.get(pathType))) // ? extends ARouterLoadPath
+
+                // 最终的：Map<String, Class<? extends ARouterPath>>
+        );
+
+        // 1.方法 public Map<String, Class<? extends ARouterPath>> getGroupMap() {
+        MethodSpec.Builder methodBuidler = MethodSpec.methodBuilder(ProcessorConfig.GROUP_METHOD_NAME) // 方法名
+                .addAnnotation(Override.class) // 重写注解 @Override
+                .addModifiers(Modifier.PUBLIC) // public修饰符
+                .returns(methodReturns); // 方法返回值
+
+        // Map<String, Class<? extends ARouterPath>> groupMap = new HashMap<>();
+        methodBuidler.addStatement("$T<$T, $T> $N = new $T<>()",
+                ClassName.get(Map.class),
+                ClassName.get(String.class),
+
+                // Class<? extends ARouterPath>
+                ParameterizedTypeName.get(ClassName.get(Class.class),
+                        WildcardTypeName.subtypeOf(ClassName.get(pathType))), // ? extends ARouterPath
+                ProcessorConfig.GROUP_VAR1,
+                ClassName.get(HashMap.class));
+
+        //	groupMap.put("order", ARouter$$Path$$order.class);
+        for (Map.Entry<String, String> entry : mAllGroupMap.entrySet()) {
+            methodBuidler.addStatement("$N.put($S, $T.class)",
+                    ProcessorConfig.GROUP_VAR1, // groupMap.put
+                    entry.getKey(), // order, personal ,app
+                    ClassName.get(aptPackage, entry.getValue()));
+        }
+
+        // return groupMap;
+        methodBuidler.addStatement("return $N", ProcessorConfig.GROUP_VAR1);
+
+        // ARouter$$Group$$ + xxxxxxxxx
+        String finalClassName = ProcessorConfig.GROUP_FILE_NAME + options;
+
+        messager.printMessage(Diagnostic.Kind.NOTE, "APT生成路由组Group类文件：" +
+                aptPackage + "." + finalClassName);
+
+        // 生成类文件：ARouter$$Group$$app
+        JavaFile.builder(aptPackage, // 包名
+                TypeSpec.classBuilder(finalClassName) // 类名
+                        .addSuperinterface(ClassName.get(groupType)) // 实现ARouterLoadGroup接口 implements ARouterGroup
+                        .addModifiers(Modifier.PUBLIC) // public修饰符
+                        .addMethod(methodBuidler.build()) // 方法的构建（方法参数 + 方法体）
+                        .build()) // 类构建完成
+                .build() // JavaFile构建完成
+                .writeTo(filer); // 文件生成器开始生成类文件
     }
 
     /**

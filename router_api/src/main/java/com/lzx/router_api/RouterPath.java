@@ -6,7 +6,7 @@ import com.lzx.router_annotation.bean.RouterBean;
 import java.util.Map;
 
 
-public interface ARouterPath {
+public interface RouterPath {
 
     /**
      *  key:"/order/MainActivity"

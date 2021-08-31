@@ -18,6 +18,17 @@ android {
         versionName app_android.versionName
 
         testInstrumentationRunner app_android.testInstrumentationRunner
+
+        buildConfigField("boolean", "isRelease", String.valueOf(isRelease))
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                // project.getName() == app
+                // this.project.getName() == app
+                // this.getProject().getName() == app
+                arguments = [moduleName: project.getName(), packageNameForAPT: packageNameForAPT]
+            }
+        }
     }
 
     buildTypes {
@@ -43,4 +54,7 @@ dependencies {
         implementation libLink
     }
 
+    implementation project(":common")
+    implementation project(":router_annotation")
+    annotationProcessor project(':router_compiler')
 }

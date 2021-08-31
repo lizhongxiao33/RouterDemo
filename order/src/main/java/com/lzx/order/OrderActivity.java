@@ -1,4 +1,4 @@
-package com.lzx.routerdemo;
+package com.lzx.order;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -9,20 +9,19 @@ import android.view.View;
 import com.lzx.router_annotation.Router;
 import com.lzx.router_api.RouterManager;
 
-@Router(path = "/app/MainActivity")
-public class MainActivity extends AppCompatActivity {
+@Router(path = "/order/OrderActivity")
+public class OrderActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Log.i("test", "/app/MainActivity");
+        Log.i("test", "/order/OrderActivity");
     }
 
-    public void jumpToOrder(View view) {
-        Log.i("test", "jumpToOrder: ");
+    public void jumpToMain(View view) {
         RouterManager.getInstance()
-                .build("/order/OrderActivity")
+                .build("/app/MainActivity")
                 .navigation(this);
     }
 }
