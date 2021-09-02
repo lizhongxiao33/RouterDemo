@@ -148,7 +148,7 @@ public class RouterProcessor extends AbstractProcessor {
         }
 
 
-        return true;
+        return false;
     }
 
 
@@ -183,7 +183,7 @@ public class RouterProcessor extends AbstractProcessor {
             for (RouterBean bean : pathList) {
                 methodBuilder.addStatement("$N.put($S, $T.create($T.$L, $T.class, $S, $S))",
                         ProcessorConfig.PATH_VAR1, // pathMap.put
-                        bean.getPath(), // "/personal/Personal_Main2Activity"
+                        bean.getPath(), // "/app/MainActivity"
                         ClassName.get(RouterBean.class), // RouterBean
                         ClassName.get(RouterBean.TypeEnum.class), // RouterBean.Type
                         bean.getTypeEnum(), // 枚举类型：ACTIVITY
@@ -249,7 +249,7 @@ public class RouterProcessor extends AbstractProcessor {
         for (Map.Entry<String, String> entry : mAllGroupMap.entrySet()) {
             methodBuidler.addStatement("$N.put($S, $T.class)",
                     ProcessorConfig.GROUP_VAR1, // groupMap.put
-                    entry.getKey(), // order, personal ,app
+                    entry.getKey(), // order ,app
                     ClassName.get(aptPackage, entry.getValue()));
         }
 

@@ -23,6 +23,8 @@ public class MainActivity extends AppCompatActivity {
         Log.i("test", "jumpToOrder: ");
         RouterManager.getInstance()
                 .build("/order/OrderActivity")
+                .withString("name", "lzx")
+                .withInt("age", 18)
                 .navigation(this);
     }
 }

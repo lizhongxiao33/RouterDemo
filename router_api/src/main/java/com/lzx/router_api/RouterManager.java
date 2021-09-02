@@ -72,8 +72,8 @@ public class RouterManager {
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public Object navigation(Context context, BundleManager bundleManager) {
-        String groupClassName = "com.lzx.router_customrouter" + "." + FILE_GROUP_NAME + group; //Router$$Group$$order
-        Log.e("test", "groupClassName=" + groupClassName);
+        String groupClassName = context.getPackageName() + "." + FILE_GROUP_NAME + group; //Router$$Group$$order
+        Log.i("test", "groupClassName=" + groupClassName);
 
 
         try {
@@ -96,7 +96,7 @@ public class RouterManager {
             if (null == loadPath) {
                 Class<? extends RouterPath> clazz = loadGroup.getGroupMap().get(group);
 
-                // 3.从map里面获取 ARouter$$Path$$personal.class
+                // 3.从map里面获取 Router$$Path$$order.class
                 loadPath = clazz.newInstance();
 
                 // 保存到缓存
